@@ -42,7 +42,7 @@ static void setValue(void)
 
 static void wait_command(void);
 
-static Button_t button7 = {
+static Button_t button = {
     .gpio.pin = 7,
     .gpio.eMode = eModeInput,
     .ePullMode = ePullModePullUp,
@@ -52,7 +52,7 @@ static Button_t button7 = {
 int main(int argc, char *const argv[])
 {
 
-    if (Button_init(&button7))
+    if (Button_init(&button))
         return EXIT_FAILURE;
 
     while (1)
@@ -68,10 +68,10 @@ static void wait_command(void)
 {
     while (1)
     {
-        if (!Button_read(&button7))
+        if (!Button_read(&button))
         {
             usleep(_1MS * 40);
-            while (!Button_read(&button7))
+            while (!Button_read(&button))
                 ;
             usleep(_1MS * 40);
             break;
