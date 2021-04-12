@@ -28,9 +28,19 @@ else()
   message(FATAL_ERROR "")
 endif()
 
+#build lib mapping
+add_library(mapping "")
+target_sources(mapping PUBLIC 
+  ${CMAKE_CURRENT_LIST_DIR}/lib/mapping.c   
+  )
+  target_include_directories(mapping 
+  PUBLIC 
+  ${CMAKE_CURRENT_LIST_DIR}/lib  
+  )
+
 #build lib interface
 add_library(interface "")
-
+target_link_libraries(interface PUBLIC mapping)
 target_sources(interface
   PUBLIC 
   ${CMAKE_CURRENT_LIST_DIR}/src/led_interface.c
