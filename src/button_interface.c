@@ -17,6 +17,22 @@ static int toogle()
     return state;
 }
 
+static void wait_press(void *object, Button_Interface *button)
+{
+    while (true)
+    {
+        if (!button->Read(object))
+        {
+            usleep(_1ms * 100);
+            break;
+        }
+        else
+        {
+            usleep(_1ms);
+        }
+    }
+}
+
 static void setValue(void *file_memory)
 {  
     /* Write a random integer to memory-mapped area. */
@@ -34,19 +50,7 @@ bool Button_Run(void *object, Button_Interface *button)
 
     while (true)
     {
-        while (true)
-        {
-            if (!button->Read(object))
-            {
-                usleep(_1ms * 100);
-                break;
-            }
-            else
-            {
-                usleep(_1ms);
-            }
-        }
-
+        wait_press(object, button);
         setValue(memory);
     }
 
