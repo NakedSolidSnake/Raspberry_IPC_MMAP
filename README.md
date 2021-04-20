@@ -60,26 +60,38 @@ Para facilitar o desenvolvimento da aplicação, as funções pertinentes ao _mm
 ### Biblioteca mapping
 Essa biblioteca é um wrapper para as funções mmap, onde sua inicialização é comum para ambos os processos, para maior praticidade foram encapsuladas em duas funções, mapping file e mapping_cleanup.
 
-Essa função retorna o endereço de uma memória compartilhada, p
+Essa função retorna o endereço de uma memória compartilhada, apartir de um arquivo e o tamanho desejado
 ```c
 void *mapping_file(const char *filename, int file_size)
-
-{
-    int fd;
-    void *file_memory;
-
-    fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-    lseek(fd, file_size + 1, SEEK_SET);
-    write(fd, "", 1);
-    lseek(fd, 0, SEEK_SET);
-
-    /* Create the memory mapping. */
-    file_memory = mmap(0, file_size, PROT_WRITE, MAP_SHARED, fd, 0);
-    close(fd);
-
-    return file_memory;
-}
 ```
+
+É Criado duas variáveis nesse ponto uma para guardar o descritor do arquivo, e um ponteiro genérico para guardar o endereço da memória que iremos alocar
+```c
+int fd;
+void *file_memory;
+```
+
+Abrimos o descritor usando o nome do arquivo passado por argumento, e como permissão de leitura e escrita, caso o arquivo não exista, ele o cria, após sua criação preparamos o arquivo para ser do tamanho da memória que iremos utilizar
+```c
+fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+lseek(fd, file_size + 1, SEEK_SET);
+write(fd, "", 1);
+lseek(fd, 0, SEEK_SET);
+```
+Criamos a memória usando descritor com permissão de escrita e do tipo compartilhado.
+```c
+/* Create the memory mapping. */
+file_memory = mmap(0, file_size, PROT_WRITE, MAP_SHARED, fd, 0);
+```
+
+Por fim fechamos o descritor e retornamos o endereço da memória alocada
+```c
+close(fd);
+
+return file_memory;
+```
+
+Essa função é responsável por liberar a memória alocada pelo mmap
 
 ```c
 void mapping_cleanup(void *mapping, int file_size)
@@ -126,9 +138,105 @@ if(pid_led == 0)
 ```
 
 ## *button_interface*
-descrever o código
+Definimos o tamanho que a memória e o caminho do arquivo e o nome do arquivo
+```c
+#define FILE_LENGTH 0x100
+
+#define FILENAME "/tmp/data.dat"
+```
+
+Criamos uma função auxiliar para alternar o estado da variável que vai refletir no estado do LED
+```c
+static int toogle()
+{
+    static int state = 0;
+    state ^= 0x01;
+    return state;
+}
+```
+
+Criamos uma função auxiliar para escrever dados na memória compartilhada
+```c
+static void set_value(void *file_memory)
+{  
+    sprintf((char *)file_memory, "%d\n", toogle());
+}
+```
+
+No *Button_Run* definimos uma variável genérica para guardar o endereço da memória compartilhada
+```c
+void *memory;
+```
+
+Inicializamos a interface button
+```c
+if (button->Init(object) == false)
+    return false;
+```
+
+Criamos a memória usando o nome e o tamanho, com o endereço da memória em mãos podemos escrever e ler os dados da memória compartilhada
+```c
+memory = mapping_file(FILENAME, FILE_LENGTH);
+```
+
+Aguardamos o pressionamento do botão e executamos a escrita na memória usando a função auxiliar set_value passando o endereço da memória como argumento
+```c
+wait_press(object, button);
+set_value(memory);
+```
+
+Caso venha sair do loop liberamos a memória alocada
+```c
+mapping_cleanup(memory, FILE_LENGTH);
+```
+
 ## *led_interface*
-descrever o código
+Definimos o tamanho que a memória e o caminho do arquivo e o nome do arquivo
+```c
+#define FILE_LENGTH 0x100
+
+#define FILENAME "/tmp/data.dat"
+```
+Criamos uma função auxiliar para ler o valor da memória compartilhada
+```c
+static int get_value(void *file_memory)
+{
+    int value = 0;
+
+    sscanf(file_memory, "%d", &value);    
+
+    return value;
+}
+```
+Em LED_Run criamos três variáveis, duas para controlar o estado do LED e uma para armazenar o valor da memória compartilhada
+```c
+int state_curr = 0;
+int state_old = -1;
+void *memory;
+```
+Inicializamos a interface de LED
+```c
+if(led->Init(object) == false)
+  return false;
+```
+Criamos a memória usando o nome e o tamanho, com o endereço da memória em mãos podemos escrever e ler os dados da memória compartilhada
+```c
+memory = mapping_file(FILENAME, FILE_LENGTH);
+```
+Ficamos fazendo polling lendo o conteúdo da memória e verificando se o estado anterior é diferente do estado atual, caso sim, então aplicamos o novo estado
+```c
+state_curr =  get_value(memory);
+if(state_curr != state_old)
+{
+    led->Set(object, state_curr);
+    state_old = state_curr;
+}
+usleep(_1ms);
+```
+Caso venha sair do loop liberamos a memória alocada
+```c
+mapping_cleanup(memory, FILE_LENGTH);
+```
 
 ## Compilando, Executando e Matando os processos
 Para compilar e testar o projeto é necessário instalar a biblioteca de [hardware](https://github.com/NakedSolidSnake/Raspberry_lib_hardware) necessária para resolver as dependências de configuração de GPIO da Raspberry Pi.
@@ -140,8 +248,8 @@ Para faciliar a execução do exemplo, o exemplo proposto foi criado baseado em 
 Pra obter uma cópia do projeto execute os comandos a seguir:
 
 ```bash
-$ git clone [projeto]
-$ cd [projeto]
+$ git clone https://github.com/NakedSolidSnake/Raspberry_IPC_MMAP
+$ cd Raspberry_IPC_MMAP
 $ mkdir build && cd build
 ```
 
@@ -191,12 +299,17 @@ Dessa forma o terminal irá apresentar somente os LOG's referente ao exemplo.
 
 Para simular o botão, o processo em modo PC cria uma FIFO para permitir enviar comandos para a aplicação, dessa forma todas as vezes que for enviado o número 0 irá logar no terminal onde foi configurado para o monitoramento, segue o exemplo
 ```bash
-colocar comando de interacao de fila
+$ echo "0" > /tmp/mmap_file
 ```
 
 Output do LOG quando enviado o comando algumas vezez
 ```bash
-colocar log
+Apr 20 06:36:41 cssouza-Latitude-5490 LED MMAP[13302]: LED Status: On
+Apr 20 06:37:45 cssouza-Latitude-5490 LED MMAP[13302]: LED Status: Off
+Apr 20 06:37:46 cssouza-Latitude-5490 LED MMAP[13302]: LED Status: On
+Apr 20 06:37:47 cssouza-Latitude-5490 LED MMAP[13302]: LED Status: Off
+Apr 20 06:37:47 cssouza-Latitude-5490 LED MMAP[13302]: LED Status: On
+Apr 20 06:37:48 cssouza-Latitude-5490 LED MMAP[13302]: LED Status: Off
 ```
 
 ### MODO RASPBERRY
