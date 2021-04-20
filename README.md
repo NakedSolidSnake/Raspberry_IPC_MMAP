@@ -25,7 +25,28 @@
 * [Referência](#referência)
 
 ## Introdução
-Preencher
+O _mmap_ cria um novo mapeamento de memória virtual, que pode ser de dois tipos: Mapeamento de arquivo, onde é necessário um arquivo para poder mapear essa memória, e o mapeamento anônimo, nesse caso não é necessário um arquivo para realizar o mapeamento. O mapeamento pode ser de dois tipos privado ou compartilhado, para que esse recurso possa ser usado na forma de IPC, precisa ser do tipo compartilhado, sendo esse o modo que será abordado no artigo. Se dois processos utilizarem o mesmo arquivo para mapear essa memória com o tipo compartilhado, um processo pode enxergar o que o outro está alterando, permitindo assim a troca de mensagem entre eles.
+
+## Criando um mapeamento de memória
+Para realizar a criação desse mapeamento faz-se uso da _system call_ mmap, onde o primeiro argumento representa o endereço onde esse mapeamento vai ser feito, o segundo argumento representa o tamanho dessa memória, o terceiro argumento representa a proteção dessa memória, o quarto o descritor do arquivo usado para esse mapeamento e por fim o quinto é o offset.
+
+```c
+#include <sys/mman.h>
+
+void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+```
+
+para mais informações sobre esse _system call_ utilize o manual do linux
+```bash
+$ man mmap
+```
+## Destruindo um mapeamento de memória
+Para destruir um mapeamento realizado, é utilizado a _system call munmap_, que libera essa porção de memória alocada.
+```c
+#include <sys/mman.h>
+
+int munmap(void *addr, size_t length);
+```
 
 ## Implementação
 
