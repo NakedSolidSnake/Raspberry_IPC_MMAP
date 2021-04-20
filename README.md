@@ -58,9 +58,9 @@ Para demonstrar o uso desse IPC, iremos utilizar o modelo Produtor/Consumidor, o
 Para facilitar o desenvolvimento da aplicação, as funções pertinentes ao _mmap_ foram abstraídas na forma de biblioteca para que facilite o uso na aplicação.
 
 ### Biblioteca mapping
-Essa biblioteca é um wrapper para as funções mmap, onde sua inicialização é comum para ambos os processos, para maior praticidade foi encapsulado em duas funções, mapping file e mapping_cleanup.
+Essa biblioteca é um wrapper para as funções mmap, onde sua inicialização é comum para ambos os processos, para maior praticidade foram encapsuladas em duas funções, mapping file e mapping_cleanup.
 
-Essa função retorna o endereço de uma memória compartilhada, par
+Essa função retorna o endereço de uma memória compartilhada, p
 ```c
 void *mapping_file(const char *filename, int file_size)
 
