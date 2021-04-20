@@ -33,7 +33,7 @@ static void wait_press(void *object, Button_Interface *button)
     }
 }
 
-static void setValue(void *file_memory)
+static void set_value(void *file_memory)
 {  
     /* Write a random integer to memory-mapped area. */
     sprintf((char *)file_memory, "%d\n", toogle());
@@ -51,7 +51,7 @@ bool Button_Run(void *object, Button_Interface *button)
     while (true)
     {
         wait_press(object, button);
-        setValue(memory);
+        set_value(memory);
     }
 
     mapping_cleanup(memory, FILE_LENGTH);

@@ -4,10 +4,11 @@
 #include <unistd.h>
 
 #define FILE_LENGTH 0x100
-
+#define _1ms    1000
 #define FILENAME "/tmp/data.dat"
 
-static int getValue(void *file_memory){
+static int get_value(void *file_memory)
+{
     int value = 0;
 
     sscanf(file_memory, "%d", &value);    
@@ -28,13 +29,13 @@ bool LED_Run(void *object, LED_Interface *led)
 
     while(true)
     {
-        state_curr =  getValue(memory);
+        state_curr =  get_value(memory);
         if(state_curr != state_old)
         {
             led->Set(object, state_curr);
             state_old = state_curr;
         }
-        usleep(1000);
+        usleep(_1ms);
     }
 
     mapping_cleanup(memory, FILE_LENGTH);
