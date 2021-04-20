@@ -323,7 +323,7 @@ $ ./kill_process.sh
 ```
 
 ## Conclusão
-Preencher
+O _mmap_ é um IPC bastante relevante para realizar troca de mensagens entre os processos, ele possui outras características interessantes que não foram abordadas, esse mecanismo é de extrema importância para permitir o uso de memória compartilhada baseada em POSIX, porém necessita de polling para verificar se o dado presente foi alterar necessitando de outros mecanismos para sincronização, como o Signal, o que gera overhead de verificação, dependendo da aplicação pode ser um fator impactante na performance.
 
 ## Referência
 * [Link do projeto completo](https://github.com/NakedSolidSnake/Raspberry_IPC_MMAP)
