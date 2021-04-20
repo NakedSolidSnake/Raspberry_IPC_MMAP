@@ -55,6 +55,39 @@ Para demonstrar o uso desse IPC, iremos utilizar o modelo Produtor/Consumidor, o
 * _button_interface_ - é reponsável por ler o GPIO em modo de leitura da Raspberry Pi e escrever o estado interno no arquivo
 * _led_interface_ - é reponsável por ler do arquivo o estado interno do botão e aplicar em um GPIO configurado como saída
 
+Para facilitar o desenvolvimento da aplicação, as funções pertinentes ao _mmap_ foram abstraídas na forma de biblioteca para que facilite o uso na aplicação.
+
+### Biblioteca mapping
+Essa biblioteca é um wrapper para as funções mmap, onde sua inicialização é comum para ambos os processos, para maior praticidade foi encapsulado em duas funções, mapping file e mapping_cleanup.
+
+Essa função retorna o endereço de uma memória compartilhada, par
+```c
+void *mapping_file(const char *filename, int file_size)
+
+{
+    int fd;
+    void *file_memory;
+
+    fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    lseek(fd, file_size + 1, SEEK_SET);
+    write(fd, "", 1);
+    lseek(fd, 0, SEEK_SET);
+
+    /* Create the memory mapping. */
+    file_memory = mmap(0, file_size, PROT_WRITE, MAP_SHARED, fd, 0);
+    close(fd);
+
+    return file_memory;
+}
+```
+
+```c
+void mapping_cleanup(void *mapping, int file_size)
+{
+    munmap(mapping, file_size);
+}
+```
+
 ### *launch_processes*
 
 No _main_ criamos duas variáveis para armazenar o PID do *button_process* e do *led_process*, e mais duas variáveis para armazenar o resultado caso o _exec_ venha a falhar.
