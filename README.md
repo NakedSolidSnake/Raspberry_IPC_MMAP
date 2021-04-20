@@ -6,7 +6,10 @@
 
 ## Tópicos
 * [Introdução](#introdução)
+* [Criando um mapeamento de memória](#criando-um-mapeamento-de-memória)
+* [Destruindo um mapeamento de memória](#destruindo-um-mapeamento-de-memória)
 * [Implementação](#implementação)
+* [Biblioteca mapping](#biblioteca-mapping)
 * [launch_processes](#launch_processes)
 * [button_interface](#button_interface)
 * [led_interface](#led_interface)
