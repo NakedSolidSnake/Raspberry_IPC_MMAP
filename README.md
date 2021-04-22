@@ -43,6 +43,13 @@ para mais informações sobre esse _system call_ utilize o manual do linux
 ```bash
 $ man mmap
 ```
+
+A imagem abaixo demonstra a interação entre dois processos compartilhando a mesma região de memória
+<p align="center">
+  <img src="./img/mmap_working.gif">
+</p>
+
+
 ## Destruindo um mapeamento de memória
 Para destruir um mapeamento realizado, é utilizado a _system call munmap_, que libera essa porção de memória alocada.
 ```c
